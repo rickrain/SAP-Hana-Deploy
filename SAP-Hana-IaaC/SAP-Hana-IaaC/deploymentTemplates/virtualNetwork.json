@@ -1,0 +1,167 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetworkSettings": {
+      "type": "object",
+      "metadata": {
+        "description": "Settings for virtual network"
+      }
+    }
+  },
+  "variables": {
+    "mgmtSubnetNsgName": "[concat(parameters('virtualNetworkSettings').mgmtSubnetName, 'SubnetNsg')]",
+    "sharedSvcsSubnetNsgName": "[concat(parameters('virtualNetworkSettings').sharedSvcsSubnetName, 'SubnetNsg')]",
+    "appsSubnetNsgName": "[concat(parameters('virtualNetworkSettings').appsSubnetName, 'SubnetNsg')]",
+    "dataSubnetNsgName": "[concat(parameters('virtualNetworkSettings').dataSubnetName, 'SubnetNsg')]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('virtualNetworkSettings').vnetName]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('mgmtSubnetNsgName'))]"
+      ],
+      "tags": {
+        "displayName": "vnet"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": "[parameters('virtualNetworkSettings').addressPrefixes]"
+        },
+        "subnets": [
+          {
+            "name": "[parameters('virtualNetworkSettings').sharedSvcsSubnetName]",
+            "properties": {
+              "addressPrefix": "[parameters('virtualNetworkSettings').sharedSvcsSubnetAddressPrefix]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('sharedSvcsSubnetNsgName'))]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('virtualNetworkSettings').appsSubnetName]",
+            "properties": {
+              "addressPrefix": "[parameters('virtualNetworkSettings').appsSubnetAddressPrefix]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('appsSubnetNsgName'))]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('virtualNetworkSettings').dataSubnetName]",
+            "properties": {
+              "addressPrefix": "[parameters('virtualNetworkSettings').dataSubnetAddressPrefix]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('dataSubnetNsgName'))]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('virtualNetworkSettings').mgmtSubnetName]",
+            "properties": {
+              "addressPrefix": "[parameters('virtualNetworkSettings').mgmtSubnetAddressPrefix]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('mgmtSubnetNsgName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('mgmtSubnetNsgName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "mgmtSubnetNsg"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allowSSH",
+            "properties": {
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "[parameters('virtualNetworkSettings').mgmtSubnetNsgSourceAddressPrefix]",
+              "destinationAddressPrefix": "*",
+              "priority": 100
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('sharedSvcsSubnetNsgName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "sharedSvcsSubnetNsg"
+      }
+    },
+    {
+      "name": "[variables('appsSubnetNsgName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "appsSubnetNsg"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allowHttp",
+            "properties": {
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "[parameters('virtualNetworkSettings').sharedSvcsSubnetAddressPrefix]",
+              "destinationAddressPrefix": "*",
+              "priority": 120
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('dataSubnetNsgName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "dataSubnetNsg"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allowHttp",
+            "properties": {
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "[parameters('virtualNetworkSettings').appsSubnetAddressPrefix]",
+              "destinationAddressPrefix": "*",
+              "priority": 120
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
