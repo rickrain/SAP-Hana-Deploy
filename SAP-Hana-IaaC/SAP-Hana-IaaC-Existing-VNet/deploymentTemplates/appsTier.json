@@ -1,0 +1,117 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appsTierSettings": {
+      "type": "object",
+      "metadata": {
+        "description": "Settings for the apps tier"
+      }
+    }
+  },
+  "variables": {
+    "vmNicName": "[concat(parameters('appsTierSettings').vmSettings.vmName, 'Nic')]",
+    "vnetId": "[resourceId(parameters('appsTierSettings').vmSettings.virtualNetworkRG, 'Microsoft.Network/virtualNetworks', parameters('appsTierSettings').vmSettings.virtualNetworkName)]",
+    "vmSubnetRef": "[concat(variables('vnetId'),'/subnets/',parameters('appsTierSettings').vmSettings.subnetName)]",
+    "stgAccountName": "[concat(parameters('appsTierSettings').stgAccountNamePrefix, uniqueString(resourceGroup().id))]"
+  },
+  "resources": [
+    {
+      "name": "[concat(variables('vmNicName'), '-', copyIndex(1))]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[concat(variables('vmNicName'), '-', copyIndex(1))]"
+      },
+      "copy": {
+        "name": "vmNicCopy",
+        "count": 2
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[parameters('appsTierSettings').vmSettings.privateIpAddresses[copyIndex()]]",
+              "subnet": {
+                "id": "[variables('vmSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('appsTierSettings').vmSettings.vmName]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "vmNicCopy",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('stgAccountName'))]"
+      ],
+      "tags": {
+        "displayName": "[parameters('appsTierSettings').vmSettings.vmName]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('appsTierSettings').vmSettings.vmSize]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('appsTierSettings').vmSettings.vmName]",
+          "adminUsername": "[parameters('appsTierSettings').vmSettings.vmUsername]",
+          "adminPassword": "[parameters('appsTierSettings').vmSettings.vmPassword]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('appsTierSettings').vmSettings.image.publisher]",
+            "offer": "[parameters('appsTierSettings').vmSettings.image.offer]",
+            "sku": "[parameters('appsTierSettings').vmSettings.image.sku]",
+            "version": "[parameters('appsTierSettings').vmSettings.image.version]"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('appsTierSettings').vmSettings.vmName, '-OSDisk')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https://', variables('stgAccountName'), '.blob.core.windows.net/vhds/', parameters('appsTierSettings').vmSettings.vmName, '-OSDisk.vhd')]"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('vmNicName'), '-1'))]",
+              "properties": {
+                "primary": true
+              }
+            },
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('vmNicName'), '-2'))]",
+              "properties": {
+                "primary": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[variables('stgAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "stg"
+      },
+      "properties": {
+        "accountType": "Premium_LRS"
+      }
+    }
+  ],
+  "outputs": {}
+}

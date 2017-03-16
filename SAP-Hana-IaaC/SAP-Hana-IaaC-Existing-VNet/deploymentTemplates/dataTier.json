@@ -1,0 +1,159 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dataTierSettings": {
+      "type": "object",
+      "metadata": {
+        "description": "Settings for the data tier"
+      }
+    }
+  },
+  "variables": {
+    "vmNicName": "[concat(parameters('dataTierSettings').vmSettings.vmName, 'Nic')]",
+    "vnetId": "[resourceId(parameters('dataTierSettings').vmSettings.virtualNetworkRG, 'Microsoft.Network/virtualNetworks', parameters('dataTierSettings').vmSettings.virtualNetworkName)]",
+    "vmSubnetRef": "[concat(variables('vnetId'),'/subnets/',parameters('dataTierSettings').vmSettings.subnetName)]",
+    "stgAccountName": "[concat(parameters('dataTierSettings').stgAccountNamePrefix, uniqueString(resourceGroup().id))]"
+  },
+  "resources": [
+    {
+      "name": "[concat(variables('vmNicName'), '-', copyIndex(1))]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[concat(variables('vmNicName'), '-', copyIndex(1))]"
+      },
+      "copy": {
+        "name": "vmNicCopy",
+        "count": 2
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[parameters('dataTierSettings').vmSettings.privateIpAddresses[copyIndex()]]",
+              "subnet": {
+                "id": "[variables('vmSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('dataTierSettings').vmSettings.vmName]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "vmNicCopy",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('stgAccountName'))]"
+      ],
+      "tags": {
+        "displayName": "[parameters('dataTierSettings').vmSettings.vmName]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('dataTierSettings').vmSettings.vmSize]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('dataTierSettings').vmSettings.vmName]",
+          "adminUsername": "[parameters('dataTierSettings').vmSettings.vmUsername]",
+          "adminPassword": "[parameters('dataTierSettings').vmSettings.vmPassword]",
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('dataTierSettings').vmSettings.image.publisher]",
+            "offer": "[parameters('dataTierSettings').vmSettings.image.offer]",
+            "sku": "[parameters('dataTierSettings').vmSettings.image.sku]",
+            "version": "[parameters('dataTierSettings').vmSettings.image.version]"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('dataTierSettings').vmSettings.vmName, '-OSDisk')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https://', variables('stgAccountName'), '.blob.core.windows.net/vhds/', parameters('dataTierSettings').vmSettings.vmName, '-OSDisk.vhd')]"
+            }
+          },
+          "dataDisks": [
+            {
+              "name": "[concat(parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-01')]",
+              "caching": "None",
+              "lun": 0,
+              "diskSizeGB": "[parameters('dataTierSettings').vmSettings.dataDiskSizeGB]",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('https://', variables('stgAccountName'), '.blob.core.windows.net/vhds/', parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-01.vhd')]"
+              }
+            },
+            {
+              "name": "[concat(parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-02')]",
+              "caching": "None",
+              "lun": 1,
+              "diskSizeGB": "[parameters('dataTierSettings').vmSettings.dataDiskSizeGB]",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('https://', variables('stgAccountName'), '.blob.core.windows.net/vhds/', parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-02.vhd')]"
+              }
+            },
+            {
+              "name": "[concat(parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-03')]",
+              "caching": "None",
+              "lun": 2,
+              "diskSizeGB": "[parameters('dataTierSettings').vmSettings.dataDiskSizeGB]",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('https://', variables('stgAccountName'), '.blob.core.windows.net/vhds/', parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-03.vhd')]"
+              }
+            },
+            {
+              "name": "[concat(parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-04')]",
+              "caching": "None",
+              "lun": 3,
+              "diskSizeGB": "[parameters('dataTierSettings').vmSettings.dataDiskSizeGB]",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('https://', variables('stgAccountName'), '.blob.core.windows.net/vhds/', parameters('dataTierSettings').vmSettings.vmName, '-DataDisk-04.vhd')]"
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('vmNicName'), '-1'))]",
+              "properties": {
+                "primary": true
+              }
+            },
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('vmNicName'), '-2'))]",
+              "properties": {
+                "primary": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[variables('stgAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "stg"
+      },
+      "properties": {
+        "accountType": "Premium_LRS"
+      }
+    }
+  ],
+  "outputs": {}
+}

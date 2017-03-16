@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appsTierSettings": {
+      "value": {
+        "name": "appsTier",
+        "vmSettings": {
+          "vmName": "sapErpCI",
+          "virtualNetworkName": "SAPNetwork",
+          "virtualNetworkRG": "SAPShared",
+          "subnetName": "apps",
+          "privateIpAddresses": [
+            "10.0.2.4",
+            "10.0.2.5"
+          ],
+          "vmSize": "Standard_DS11_v2",
+          "vmUsername": "adminuser",
+          "vmPassword": "P@ssw0rd1234",
+          "image": {
+            "publisher": "Redhat",
+            "offer": "RHEL",
+            "sku": "7.2",
+            "version": "latest"
+          }
+        },
+        "stgAccountNamePrefix": "sapstg"
+      }
+    }
+  }
+}
