@@ -19,18 +19,18 @@
             "version": "latest"
           }
         },
-        "puppetMasterVmSettings": {
-          "vmName": "puppetMasterVM",
-          "vmSize": "Standard_D2_v2",
-          "vmUsername": "adminuser",
-          "vmPassword": "P@ssw0rd1234",
-          "image": {
-            "publisher": "Puppet",
-            "offer": "Puppet-Enterprise",
-            "sku": "2016-1",
-            "version": "latest"
-          }
-        }
+        //"puppetMasterVmSettings": {
+        //  "vmName": "puppetMasterVM",
+        //  "vmSize": "Standard_D2_v2",
+        //  "vmUsername": "adminuser",
+        //  "vmPassword": "P@ssw0rd1234",
+        //  "image": {
+        //    "publisher": "Puppet",
+        //    "offer": "Puppet-Enterprise",
+        //    "sku": "2016-1",
+        //    "version": "latest"
+        //  }
+        //}
       }
     }
   }

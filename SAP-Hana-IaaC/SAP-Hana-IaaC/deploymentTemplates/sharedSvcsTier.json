@@ -14,7 +14,8 @@
     "vmSubnetRef": "[concat(variables('vnetId'),'/subnets/',parameters('sharedSvcsTierSettings').subnetName)]",
 
     "winClientVmNicName": "[concat(parameters('sharedSvcsTierSettings').winClientVmSettings.vmName, 'Nic')]",
-    "puppetMasterVmNicName": "[concat(parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmName, 'Nic')]"
+    //"puppetMasterVmNicName": "[concat(parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmName, 'Nic')]",
+    //"puppetMasterStgAccountName": "[concat('puppetstg', uniqueString(resourceGroup().id))]"
   },
   "resources": [
     {
@@ -112,9 +113,10 @@
     //  "name": "[parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmName]",
     //  "type": "Microsoft.Compute/virtualMachines",
     //  "location": "[resourceGroup().location]",
-    //  "apiVersion": "2016-04-30-preview",
+    //  "apiVersion": "2015-06-15",
     //  "dependsOn": [
-    //    "[concat('Microsoft.Network/networkInterfaces/', variables('puppetMasterVmNicName'))]"
+    //    "[concat('Microsoft.Network/networkInterfaces/', variables('puppetMasterVmNicName'))]",
+    //    "[concat('Microsoft.Storage/storageAccounts/', variables('puppetMasterStgAccountName'))]"
     //  ],
     //  "tags": {
     //    "displayName": "[parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmName]"
@@ -126,7 +128,10 @@
     //    "osProfile": {
     //      "computerName": "[parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmName]",
     //      "adminUsername": "[parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmUsername]",
-    //      "adminPassword": "[parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmPassword]"
+    //      "adminPassword": "[parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmPassword]",
+    //      "linuxConfiguration": {
+    //        "disablePasswordAuthentication": false
+    //      }
     //    },
     //    "storageProfile": {
     //      "imageReference": {
@@ -139,8 +144,8 @@
     //        "name": "[concat(parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmName, '-OSDisk')]",
     //        "caching": "ReadWrite",
     //        "createOption": "FromImage",
-    //        "managedDisk": {
-    //          "storageAccountType": "Standard_LRS"
+    //        "vhd": {
+    //          "uri": "[concat('https://', variables('puppetMasterStgAccountName'), '.blob.core.windows.net/vhds/', parameters('sharedSvcsTierSettings').puppetMasterVmSettings.vmName, '-OSDisk.vhd')]"
     //        }
     //      }
     //    },
@@ -151,6 +156,19 @@
     //        }
     //      ]
     //    }
+    //  }
+    //},
+    //{
+    //  "name": "[variables('puppetMasterStgAccountName')]",
+    //  "type": "Microsoft.Storage/storageAccounts",
+    //  "location": "[resourceGroup().location]",
+    //  "apiVersion": "2015-06-15",
+    //  "dependsOn": [],
+    //  "tags": {
+    //    "displayName": "[variables('puppetMasterStgAccountName')]"
+    //  },
+    //  "properties": {
+    //    "accountType": "Standard_LRS"
     //  }
     //}
   ],
