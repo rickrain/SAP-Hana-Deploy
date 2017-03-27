@@ -15,7 +15,7 @@ These templates assume you have an existing virtual network already deployed and
 4. (optional) You can change other properties, such as vmName, vmSize, image, etc. to customize the deployment to your environment.  
 5. Save the changes.
 6. Open **.\deploymentParameters\dataTier.Parameters.json**
-7. Repeat steps 2 through 5 for the SAP Hana DB virtual machine.
+7. Repeat steps 2 through 4 for the SAP Hana DB virtual machine.
 8. Open a PowerShell console.
 ```PowerShell
 # Authenticate to Azure Subscription
