@@ -11,9 +11,16 @@
   },
   "variables": {
     "vmNicName": "[concat(parameters('dataTierSettings').vmSettings.vmName, 'Nic')]",
-    "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('dataTierSettings').vmSettings.virtualNetworkName)]",
+    "vnetId": "[resourceId(parameters('dataTierSettings').vmSettings.virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks', parameters('dataTierSettings').vmSettings.virtualNetworkName)]",
     "vmSubnetRef": "[concat(variables('vnetId'),'/subnets/',parameters('dataTierSettings').vmSettings.subnetName)]",
-    "stgAccountName": "[concat(parameters('dataTierSettings').stgAccountNamePrefix, uniqueString(resourceGroup().id))]"
+    "stgAccountName": "[concat(parameters('dataTierSettings').stgAccountNamePrefix, uniqueString(resourceGroup().id))]",
+    "templateLinkStrings": "[split(deployment().properties.templateLink.uri, '?')]",
+    "artifactsLocation": "[uri(deployment().properties.templateLink.uri, '..')]",
+    "artifactsLocationSasToken": "[variables('templateLinkStrings')[1]]",
+    "cseScriptFolder": "CustomScripts",
+    "cseScriptFileName": "cse.sh",
+    "cseFileUri": "[concat(variables('artifactsLocation'), variables('cseScriptFolder'), '/', variables('cseScriptFileName'), '?', variables('artifactsLocationSasToken'))]"
+
   },
   "resources": [
     {
@@ -63,7 +70,7 @@
         "osProfile": {
           "computerName": "[parameters('dataTierSettings').vmSettings.vmName]",
           "adminUsername": "[parameters('dataTierSettings').vmSettings.vmUsername]",
-          "adminPassword": "[parameters('dataTierSettings').vmSettings.vmPassword]",
+          "adminPassword": "[parameters('dataTierSettings').vmSettings.vmPassword]"
         },
         "storageProfile": {
           "imageReference": {
@@ -139,7 +146,33 @@
             }
           ]
         }
-      }
+      },
+      "resources": [
+        {
+          "name": "cse",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('dataTierSettings').vmSettings.vmName)]"
+          ],
+          "tags": {
+            "displayName": "cse"
+          },
+          "properties": {
+            "publisher": "Microsoft.OSTCExtensions",
+            "type": "CustomScriptForLinux",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[variables('cseFileUri')]"
+              ],
+              "commandToExecute": "[concat('sh ', variables('cseScriptFileName'), ' ', parameters('dataTierSettings').puppetServerIpAddress)]"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "[variables('stgAccountName')]",

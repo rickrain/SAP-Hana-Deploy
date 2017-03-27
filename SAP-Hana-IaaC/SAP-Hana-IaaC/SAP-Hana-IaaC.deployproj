@@ -27,20 +27,15 @@
   <ItemGroup>
     <Content Include="azuredeploy.json" />
     <Content Include="azuredeploy.parameters.json" />
+    <Content Include="CustomScripts\cse.sh" />
     <None Include="Deployment.targets">
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
     <Content Include="deploymentParameters\appsTier.parameters.json" />
     <Content Include="deploymentParameters\dataTier.parameters.json" />
-    <Content Include="deploymentParameters\jumpbox.parameters.json" />
-    <Content Include="deploymentParameters\virtualNetwork.parameters.json" />
-    <Content Include="deploymentParameters\sharedSvcsTier.parameters.json" />
     <Content Include="deploymentTemplates\appsTier.json" />
     <Content Include="deploymentTemplates\dataTier.json" />
-    <Content Include="deploymentTemplates\jumpbox.json" />
-    <Content Include="deploymentTemplates\virtualNetwork.json" />
-    <Content Include="deploymentTemplates\sharedSvcsTier.json" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>

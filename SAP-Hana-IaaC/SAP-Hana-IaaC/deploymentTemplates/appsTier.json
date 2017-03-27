@@ -11,9 +11,15 @@
   },
   "variables": {
     "vmNicName": "[concat(parameters('appsTierSettings').vmSettings.vmName, 'Nic')]",
-    "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('appsTierSettings').vmSettings.virtualNetworkName)]",
+    "vnetId": "[resourceId(parameters('appsTierSettings').vmSettings.virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks', parameters('appsTierSettings').vmSettings.virtualNetworkName)]",
     "vmSubnetRef": "[concat(variables('vnetId'),'/subnets/',parameters('appsTierSettings').vmSettings.subnetName)]",
-    "stgAccountName": "[concat(parameters('appsTierSettings').stgAccountNamePrefix, uniqueString(resourceGroup().id))]"
+    "stgAccountName": "[concat(parameters('appsTierSettings').stgAccountNamePrefix, uniqueString(resourceGroup().id))]",
+    "templateLinkStrings": "[split(deployment().properties.templateLink.uri, '?')]",
+    "artifactsLocation": "[uri(deployment().properties.templateLink.uri, '..')]",
+    "artifactsLocationSasToken": "[variables('templateLinkStrings')[1]]",
+    "cseScriptFolder": "CustomScripts",
+    "cseScriptFileName": "cse.sh",
+    "cseFileUri": "[concat(variables('artifactsLocation'), variables('cseScriptFolder'), '/', variables('cseScriptFileName'), '?', variables('artifactsLocationSasToken'))]"
   },
   "resources": [
     {
@@ -97,7 +103,33 @@
             }
           ]
         }
-      }
+      },
+      "resources": [
+        {
+          "name": "cse",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('appsTierSettings').vmSettings.vmName)]"
+          ],
+          "tags": {
+            "displayName": "cse"
+          },
+          "properties": {
+            "publisher": "Microsoft.OSTCExtensions",
+            "type": "CustomScriptForLinux",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[variables('cseFileUri')]"
+              ],
+              "commandToExecute": "[concat('sh ', variables('cseScriptFileName'), ' ', parameters('appsTierSettings').puppetServerIpAddress)]"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "[variables('stgAccountName')]",
@@ -113,5 +145,5 @@
       }
     }
   ],
-  "outputs": {}
+  "outputs": {  }
 }
