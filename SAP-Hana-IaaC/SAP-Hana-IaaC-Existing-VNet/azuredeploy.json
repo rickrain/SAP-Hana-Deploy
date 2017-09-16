@@ -1,0 +1,127 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "_artifactsLocation": {
+      "type": "string"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "templateFolder": "deploymentTemplates",
+    "parametersFolder": "deploymentParameters",
+
+    // "virtualNetworkTemplateFileName": "virtualNetwork.json",
+    // "virtualNetworkTemplateParametersFileName": "virtualNetwork.parameters.json",
+
+    "jumpboxTemplateFileName": "jumpbox.json",
+    "jumpboxTemplateParametersFileName": "jumpbox.parameters.json",
+
+    "dataTierTemplateFileName": "dataTier.json",
+    "dataTierTemplateParametersFileName": "dataTier.parameters.json",
+
+    "appsTierTemplateFileName": "appsTier.json",
+    "appsTierTemplateParametersFileName": "appsTier.parameters.json",
+
+    "sharedSvcsTierTemplateFileName": "sharedSvcsTier.json",
+    "sharedSvcsTierTemplateParametersFileName": "sharedSvcsTier.parameters.json"
+  },
+  "resources": [
+    // {
+    //   "name": "virtualNetwork",
+    //   "type": "Microsoft.Resources/deployments",
+    //   "apiVersion": "2016-09-01",
+    //   "dependsOn": [],
+    //   "properties": {
+    //     "mode": "Incremental",
+    //     "templateLink": {
+    //       "uri": "[concat(parameters('_artifactsLocation'), '/', variables('templateFolder'), '/', variables('virtualNetworkTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+    //       "contentVersion": "1.0.0.0"
+    //     },
+    //     "parametersLink": {
+    //       "uri": "[concat(parameters('_artifactsLocation'), '/', variables('parametersFolder'), '/', variables('virtualNetworkTemplateParametersFileName'), parameters('_artifactsLocationSasToken'))]",
+    //       "contentVersion": "1.0.0.0"
+    //     }
+    //   }
+    // },
+    {
+      "name": "jumpbox",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        // "virtualNetwork"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('templateFolder'), '/', variables('jumpboxTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('parametersFolder'), '/', variables('jumpboxTemplateParametersFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        }
+      }
+    },
+    {
+      "name": "dataTier",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        // "virtualNetwork"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('templateFolder'), '/', variables('dataTierTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('parametersFolder'), '/', variables('dataTierTemplateParametersFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        }
+      }
+    },
+    {
+      "name": "appsTier",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        // "virtualNetwork"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('templateFolder'), '/', variables('appsTierTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('parametersFolder'), '/', variables('appsTierTemplateParametersFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        }
+      }
+    },
+    {
+      "name": "sharedSvcsTier",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        // "virtualNetwork"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('templateFolder'), '/', variables('sharedSvcsTierTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('parametersFolder'), '/', variables('sharedSvcsTierTemplateParametersFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        }
+      }
+    }
+  ],
+  "outputs": {  }
+}
